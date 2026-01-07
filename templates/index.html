@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Search AI</title>
+    <style>
+        body { font-family: sans-serif; background-color: #1e1e1e; color: white; text-align: center; padding: 50px; }
+        .container { max-width: 600px; margin: auto; background: #2d2d2d; padding: 30px; border-radius: 15px; }
+        h1 { color: #4facfe; }
+        input[type="file"] { margin: 20px 0; }
+        button { background: #4facfe; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #00f2fe; }
+        
+        /* Webcam Styles */
+        #video { width: 100%; border-radius: 10px; display: none; }
+        #canvas { display: none; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Face Finder Portal</h1>
+    <p>Upload a photo or snap a selfie to search the database.</p>
+
+    <div style="margin-bottom: 20px;">
+        <button onclick="showUpload()" style="margin-right: 10px;">Upload File</button>
+        <button onclick="showWebcam()">Use Webcam</button>
+    </div>
+
+    <form id="uploadForm" action="/search" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept="image/*" required>
+        <br>
+        <button type="submit">Search Database</button>
+    </form>
+
+    <div id="webcamContainer" class="hidden">
+        <video id="video" autoplay></video>
+        <canvas id="canvas"></canvas>
+        <br><br>
+        <button id="snapBtn" onclick="snapAndSearch()">Snap & Search</button>
+        
+        <form id="webcamForm" action="/search" method="post">
+            <input type="hidden" name="webcam_image" id="webcam_image">
+        </form>
+    </div>
+</div>
+
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const webcamInput = document.getElementById('webcam_image');
+
+    function showUpload() {
+        document.getElementById('uploadForm').classList.remove('hidden');
+        document.getElementById('webcamContainer').classList.add('hidden');
+        // Stop video stream if active
+        if(video.srcObject) { video.srcObject.getTracks().forEach(track => track.stop()); }
+    }
+
+    function showWebcam() {
+        document.getElementById('uploadForm').classList.add('hidden');
+        document.getElementById('webcamContainer').classList.remove('hidden');
+        document.getElementById('video').style.display = "block";
+
+        // Access Webcam
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => { video.srcObject = stream; })
+            .catch(err => { alert("Error accessing webcam: " + err); });
+    }
+
+    function snapAndSearch() {
+        // Draw video frame to canvas
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        
+        // Convert to Base64 String
+        const dataURL = canvas.toDataURL('image/jpeg');
+        webcamInput.value = dataURL;
+        
+        // Submit
+        document.getElementById('webcamForm').submit();
+    }
+</script>
+
+</body>
+</html>
